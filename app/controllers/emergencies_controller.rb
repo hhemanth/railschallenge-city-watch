@@ -1,39 +1,34 @@
 class EmergenciesController < ApplicationController
   def create
     response = {}
-    emergency = Emergency.new(emergency_params)
-    passed_params = params["emergency"].keys
-    valid_params = ["code", "fire_severity", "police_severity", "medical_severity"]
-    extra_params = passed_params - valid_params
-    if extra_params.size > 0
-      response["message"] = "found unpermitted parameter: #{extra_params.first}"
-      status_code = 422
-      render json: response, status: status_code and return
-    end
-
-    if emergency.valid?
-      emergency.save!
-      response['emergency'] = emergency.slice(:code, :fire_severity, :medical_severity, :police_severity)
-      status_code = 201
+    if new_emergency(emergency_params).save
+      render json: {"emergency"=>new_emergency}, serializers: EmergencySerializer, status: 201
     else
-      response["message"] = emergency.errors
-      status_code = 422
+      render json: {"message" => errors_for(new_emergency)}, status: 422
     end
+  end
 
-    render json: response, status: status_code
+  def show
+    render json: {"emergency"=> emergency}, serializers: EmergencySerializer, status: 200
   end
 
   def index
-    response = {
-
-    }
-    status_code = 200
-
-    render json: response, status: status_code
-
+    render json: {"emergencies" => Emergency.all}, serializers: EmergencySerializer, status: 200
   end
 
   private
+
+  def emergency
+    @emergency ||= Emergency.find(params[:id])
+  end
+
+  def errors_for(e)
+    e.errors.messages.reduce({}) {|acc, (k, v)| acc.merge(k => v.sort) }
+  end
+
+  def new_emergency(attrs={})
+    @emergency ||= Emergency.new(attrs)
+  end
 
   def emergency_params
     params.require(:emergency).permit(:code, :fire_severity, :police_severity, :medical_severity)
