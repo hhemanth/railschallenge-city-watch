@@ -1,0 +1,10 @@
+  { "emergencies" :[
+   <% @emergencies.each do |emergency| %>
+    {
+      "code": "<%= emergency.code %>",
+      "fire_severity": <%= emergency.fire_severity %>,
+      "police_severity": <%= emergency.police_severity %>,
+      "medical_severity": <%= emergency.medical_severity %>
+    }
+  <% end %>
+  ]}
